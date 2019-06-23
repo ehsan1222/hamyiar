@@ -1,5 +1,11 @@
 {
 
+    "autoload": {
+        "psr-4":{
+            "Core\\": "app/Core" 
+        }
+    },
+    
     "require": {
         "slim/slim": "^3.12"
     }
