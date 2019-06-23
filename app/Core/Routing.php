@@ -28,4 +28,8 @@ class Routing{
             'action' => 'users'
         ]
     ];
+
+    function __construct(){
+        return $this->routes;
+    }
 }
