@@ -1,23 +1,12 @@
 <?php
+ini_set('display_errors', '1');
+
 use \Psr\Http\Message\ServerRequestInterface as Request;
 use \Psr\Http\Message\ResponseInterface as Response;
 
-require '../vendor/autoload.php';
+require_once __DIR__.'/../vendor/autoload.php';
 
 $app = new \Slim\App;
-$app->get('/test/login/{id}', function (Request $request, Response $response, array $args) {
-    $id = $args['id'];
-    $arr = array();
-    if($id == '123'){
-        array_push($arr, array("error"=>false, "message"=>null));
-    }else{
-        array_push($arr, array("error"=>true, "message"=>"Invalid ID"));
-        array_push($arr, array(array("api_key"=>"123")));
-    }
-    $response->getBody()->write(json_encode($arr));
-
-    return $response;
-});
 
 $app->get('/test/users', function(Request $request, Response $response, array $args){
     $arr = array();
@@ -57,3 +46,10 @@ $app->get('/test/users/{id}', function(Request $request, Response $response, arr
 });
 
 $app->run();
+
+function dd($input){
+    echo "<pre>";
+    var_dump($input);
+    echo "</pre>";
+    die;
+}
