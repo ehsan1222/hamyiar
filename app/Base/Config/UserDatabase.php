@@ -45,6 +45,23 @@ class UserDatabase{
         } 
     }
 
+    public function update_user(array $user_information){
+        $sql = "UPDATE {$this->table_name} SET 
+        name_family=?, mobile_number=?,gender=?, account_card=?, birthday_date=?, email=? 
+        WHERE api_key=?";
+
+        $statement = $this->connection->prepare($sql);
+        $statement->bind_param('ssissss',$user_information['name_family'], $user_information['mobile_number'],
+        $user_information['gender'], $user_information['account_card'], $user_information['birthday_date'],
+        $user_information['email'], $user_information['api_key']);
+
+        if($statement->execute()){
+            return "done";
+        }else{
+            return "failed";    
+        }
+    }
+
     // check username is already exists or not
     public function is_exists_username($username){
         $sql = "SELECT * FROM {$this->table_name} WHERE username='$username'";
