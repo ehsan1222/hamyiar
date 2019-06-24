@@ -126,7 +126,8 @@ $app->get('/user/information', function(Request $request, Response $response, ar
                 'gender'       =>$result['gender'],
                 'score'        =>$result['score'],
                 'account_card' =>$result['account_card'],
-                'username'     =>$result['username']
+                'username'     =>$result['username'],
+                'birthday_date'=>$result['birthday_date']
             ]
         ];
     }
