@@ -15,8 +15,8 @@ $configuration = [
     ],
 ];
 
-$c = new \Slim\Container($configuration);
-$app = new \Slim\App();
+$c   = new \Slim\Container($configuration);
+$app = new \Slim\App($c);
 
 $app->post('/register', function(Request $request, Response $response, array $args){
     //get data from HTTP POST
@@ -136,46 +136,71 @@ $app->get('/user/information', function(Request $request, Response $response, ar
 });
 
 
-// $app->get('/foo', function(Request $request, Response $response, array $args){
-//     echo "fooooo";
-// })->add(new UserMiddleware());
+$app->put('/user/information', function(Request $request, Response $response, array $args){
+    $header = $request -> getHeaders();
+    $data   = $request -> getParsedBody();
+    $output = array();
+    
+    $api_key        = validate_data($header["HTTP_AUTHENTICATION_INFO"][0]);
+    $name_family    = validate_data($data['name_family']);
+    $mobile_number  = validate_data($data['mobile_number']);
+    $gender         = $data['gender'];
+    $account_number = validate_data($data['account_number']);
+    $birthday_date  = date('Y-m-d', strtotime($data['birthday_date']));
+    $email          = validate_data($data['email']);
 
-$app->get('/test/users', function(Request $request, Response $response, array $args){
-    $arr = array();
-    array_push($arr, array("error"=>false, "message"=>null));
-    $tmp = array();
-    array_push($tmp, array("id"=>1,"name"=>"ehsan", "family"=>"maddahi", "age"=>21));
-    array_push($tmp, array("id"=>2,"name"=>"ali", "family"=>"moradi", "age"=>23));
-    array_push($tmp, array("id"=>3,"name"=>"nazanin", "family"=>"farhadi", "age"=>27));
-    array_push($arr, $tmp);
-    $response->getBody()->write(json_encode($arr));
-    return $response;
-});
+    if(empty($api_key)){
+        $output = [
+            ["error"=>true, "message" => "api_key is not set"]
+        ];
+    } else if(empty($name_family)){
+        $output = [
+            ["error"=>true, "message" => "name_family is not set"]
+        ];
+    } else if(empty($email)){
+        $output = [
+            ["error"=>true, "message" => "email is not set"]
+        ];
+    } else if(!filter_var($email, FILTER_VALIDATE_EMAIL)){
+        $output = [
+            ["error"=>true, "message" => "invalid email format"]
+        ];
+    }else{
+        // connect to database
+        $database   = new Database();
+        $connection = $database->connect();
+        
+        // set connection to user database
+        $user_database = new UserDatabase($connection);
 
-$app->get('/test/users/{id}', function(Request $request, Response $response, array $args){
-    $arr = array();
-    array_push($arr, array("error"=>false, "message"=>null));
-    $tmp = array();
-    array_push($tmp, array("id"=>1,"name"=>"ehsan", "family"=>"maddahi", "age"=>21));
-    array_push($tmp, array("id"=>2,"name"=>"ali", "family"=>"moradi", "age"=>23));
-    array_push($tmp, array("id"=>3,"name"=>"nazanin", "family"=>"farhadi", "age"=>27));
-    array_push($arr, $tmp);
-    $str = json_encode($arr);
-    $new_arr = json_decode($str)[1];
-    $arr = array();
-    foreach($new_arr as $key){
-        if($key['id'] == $request['id']){
-            $arr[] = array("error"=>false, "message"=>null);
-            $arr[] = array("id"=>$key['id'], "name"=>$key['name'], "family"=> $key['family'], "age"=>$key['age']);
+        // user information arr
+        $arr = [
+            'api_key'        => $api_key,
+            'name_family'    => $name_family,
+            'mobile_number'  => $mobile_number,
+            'gender'         => $gender,
+            'account_number' => $account_number,
+            'birthday_date'  => $birthday_date,
+            'email'          => $email
+        ];
+
+        $result = $user_database -> update_user($arr);    
+        if(strcmp($result, "done") == 0){
+            $output = [
+                ["error"=>true, "message" => "update done"]
+            ];
+        }else{
+            $output = [
+                ["error"=>true, "message" => "update failed"]
+            ];
         }
+        $database->disconnect();
     }
-    if(empty($arr)){
-        $arr[] = array("error"=>true, "message"=>"User not found!");
-    }
-    $response->getBody()->write(json_encode($arr));
+    $response->getBody()->write(json_encode($output));
     return $response;
-
 });
+
+
 
 $app->run();
 
