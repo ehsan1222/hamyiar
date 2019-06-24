@@ -18,33 +18,36 @@ $configuration = [
 $c   = new \Slim\Container($configuration);
 $app = new \Slim\App($c);
 
+// add new user
 $app->post('/register', function(Request $request, Response $response, array $args){
     //get data from HTTP POST
     $data = $request->getParsedBody();
     
+    // check null pointer
+    $name_family = isset($data['name_family']) ? validate_data($data['name_family']) : '';
+    $email       = isset($data['email']) ? validate_data($data['email']) : '';
+    $username    = isset($data['username']) ? validate_data($data['username']) : '';
+    $password    = isset($data['password']) ? validate_data($data['password']) : '';
+    
     $output = array();
     
-    if(empty($data['name_family'])){
+    if(empty($name_family)){
         $output = [
             ["error"=> true , "message"=>"name_family parameter isn't set"]
         ];
-    } else if(empty($data['email'])){
+    } else if(empty($email)){
         $output = [
             ["error"=> true, "message"=>"email parameter isn't set"]
         ];
-    } else if(empty($data['username'])){
+    } else if(empty($username)){
         $output = [
             ["error"=> true, "message"=>"username parameter isn't set"]
         ];
-    } else if(empty($data['email'])){
+    } else if(empty($email)){
         $output = [
             ["error"=> true, "message"=>"password parameter isn't set"]
         ];
     } else {
-        $name_family = validate_data($data['name_family']);
-        $email       = validate_data($data['email']);
-        $username    = validate_data($data['username']);
-        $password    = validate_data($data['password']);
         
         if(!preg_match('/^[a-zA-Z0-9]{5,}$/', $username)) { // for english chars + numbers only
             // valid username, alphanumeric & longer than or equals 5 chars
@@ -103,31 +106,33 @@ $app->post('/register', function(Request $request, Response $response, array $ar
     return $response;
 });
 
-
+// get user information from database
 $app->get('/user/information', function(Request $request, Response $response, array $args){
     $data = $request->getHeaders();
-    
+    // check null pointer
+    $api_key = isset($data["HTTP_AUTHENTICATION_INFO"][0]) ? validate_data($data["HTTP_AUTHENTICATION_INFO"][0]) : '';
+
     $output = array();
-    if(empty($data["HTTP_AUTHENTICATION_INFO"])){
+    if(empty($api_key)){
         $output = [
             ["error"=>true, "message" => "api_key is not set"]
         ];
     }else{
-        $api_key = validate_data($data["HTTP_AUTHENTICATION_INFO"][0]);
+        
         $connection    = new Database();
         $user_database = new UserDatabase($connection->connect());
         $result = $user_database->get_user($api_key);
         $output = [
             ["error"=>false, "message" => null],
             [
-                'name_family'  =>$result['name_family'],
-                'email'        =>$result['email'],
-                'mobile_number'=>$result['mobile_number'],
-                'gender'       =>$result['gender'],
-                'score'        =>$result['score'],
-                'account_card' =>$result['account_card'],
-                'username'     =>$result['username'],
-                'birthday_date'=>$result['birthday_date']
+                'name_family'  => $result['name_family'],
+                'email'        => $result['email'],
+                'mobile_number'=> $result['mobile_number'],
+                'gender'       => $result['gender'],
+                'score'        => $result['score'],
+                'account_card' => $result['account_card'],
+                'username'     => $result['username'],
+                'birthday_date'=> $result['birthday_date']
             ]
         ];
     }
@@ -135,20 +140,20 @@ $app->get('/user/information', function(Request $request, Response $response, ar
     return $response;
 });
 
-
+// update user information 
 $app->put('/user/information', function(Request $request, Response $response, array $args){
     $header = $request -> getHeaders();
     $data   = $request -> getParsedBody();
-    $output = array();
+    // check null pointer
+    $api_key        = isset($header["HTTP_AUTHENTICATION_INFO"][0]) ? validate_data($header["HTTP_AUTHENTICATION_INFO"][0]) : '';
+    $name_family    = isset($data['name_family']) ? validate_data($data['name_family']) : '';
+    $mobile_number  = isset($data['mobile_number']) ? validate_data($data['mobile_number']) : '';
+    $gender         = isset($data['gender']) ? $data['gender'] : 0;
+    $account_number = isset($data['account_number']) ? validate_data($data['account_number']) : '';
+    $birthday_date  = isset($data['birthday_date']) ? date('Y-m-d', strtotime($data['birthday_date'])): '0000-00-00';
+    $email          = isset($data['email']) ? validate_data($data['email']) : '';
     
-    $api_key        = validate_data($header["HTTP_AUTHENTICATION_INFO"][0]);
-    $name_family    = validate_data($data['name_family']);
-    $mobile_number  = validate_data($data['mobile_number']);
-    $gender         = $data['gender'];
-    $account_number = validate_data($data['account_number']);
-    $birthday_date  = date('Y-m-d', strtotime($data['birthday_date']));
-    $email          = validate_data($data['email']);
-
+    $output = array();
     if(empty($api_key)){
         $output = [
             ["error"=>true, "message" => "api_key is not set"]
@@ -187,7 +192,7 @@ $app->put('/user/information', function(Request $request, Response $response, ar
         $result = $user_database -> update_user($arr);    
         if(strcmp($result, "done") == 0){
             $output = [
-                ["error"=>true, "message" => "update done"]
+                ["error"=>false, "message" => "update done"]
             ];
         }else{
             $output = [
@@ -195,6 +200,56 @@ $app->put('/user/information', function(Request $request, Response $response, ar
             ];
         }
         $database->disconnect();
+    }
+    $response->getBody()->write(json_encode($output));
+    return $response;
+});
+
+// login user ------ Return: api_key
+$app->post('/login', function(Request $request, Response $response, array $args){
+    $data = $request->getParsedBody();
+    // check null pointer
+    $username = isset($data['username']) ? validate_data($data['username']): '';
+    $password = isset($data['password']) ? validate_data($data['password']): '';
+    $output = array();
+    if(empty($username) || empty($password)){
+        $output = [
+            ["error"=> true, "message"=>"username or password isn't set"]
+        ];
+    }else if(!preg_match('/^[a-zA-Z0-9]{5,}$/', $username)) { // for english chars + numbers only
+        // valid username, alphanumeric & longer than or equals 5 chars
+        $output = [
+            ["error"=> true, "message"=>"username isn't valid"]
+        ];  
+    }else if(!preg_match('/^[a-zA-Z0-9]{5,}$/', $password)) { // for english chars + numbers only
+        // valid password, alphanumeric & longer than or equals 5 chars
+        $output = [
+            ["error"=> true, "message"=>"password isn't valid"]
+        ];  
+    }else{
+        $arr = [
+            "username" => $username,
+            "password" => $password
+        ];
+    
+        // connect to database
+        $database   = new Database();
+        $connection = $database->connect();
+        // set connection to userDatabase class
+        $user_database = new UserDatabase($connection);
+        // get api_key
+        $api_key = $user_database -> get_user_api_key($arr);
+        // check username and password been correct or not
+        if(empty($api_key)){
+            $output = [
+                ["error"=> true, "message"=>"username or password isn't correct"]
+            ];  
+        }else{
+            $output = [
+                ["error"   => false, "message"=>null],
+                ["api_key" => $api_key]
+            ];  
+        }
     }
     $response->getBody()->write(json_encode($output));
     return $response;
