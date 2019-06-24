@@ -62,6 +62,24 @@ class UserDatabase{
         }
     }
 
+    // get api_key after login
+    public function get_user_api_key(array $user_information){
+        $username = $user_information['username'];
+        
+        $sql = "SELECT * FROM {$this->table_name} WHERE username='{$username}'";   
+
+        if($result = $this->connection->query($sql)){
+            if($result -> num_rows > 0){
+                $arr = $result ->fetch_assoc();
+                $password = $this->create_secure_password($user_information['password'], $arr['salt']);
+                if(strcmp($arr['password'], $password) == 0){
+                    return $arr['api_key'];
+                }
+            }
+        }
+        return null;
+    }
+
     // check username is already exists or not
     public function is_exists_username($username){
         $sql = "SELECT * FROM {$this->table_name} WHERE username='$username'";
