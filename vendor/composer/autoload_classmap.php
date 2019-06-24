@@ -6,6 +6,8 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
+    'Base\\Config\\Database' => $baseDir . '/app/Base/Config/Database.php',
+    'Base\\Config\\UserDatabase' => $baseDir . '/app/Base/Config/UserDatabase.php',
     'Core\\Routing' => $baseDir . '/app/Core/Routing.php',
     'FastRoute\\BadRouteException' => $vendorDir . '/nikic/fast-route/src/BadRouteException.php',
     'FastRoute\\DataGenerator' => $vendorDir . '/nikic/fast-route/src/DataGenerator.php',

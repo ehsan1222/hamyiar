@@ -32,6 +32,10 @@ class ComposerStaticInit6737114585d368839390e8858d1e5bd7
         array (
             'Core\\' => 5,
         ),
+        'B' => 
+        array (
+            'Base\\' => 5,
+        ),
     );
 
     public static $prefixDirsPsr4 = array (
@@ -59,6 +63,10 @@ class ComposerStaticInit6737114585d368839390e8858d1e5bd7
         array (
             0 => __DIR__ . '/../..' . '/app/Core',
         ),
+        'Base\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/app/Base',
+        ),
     );
 
     public static $prefixesPsr0 = array (
@@ -72,6 +80,8 @@ class ComposerStaticInit6737114585d368839390e8858d1e5bd7
     );
 
     public static $classMap = array (
+        'Base\\Config\\Database' => __DIR__ . '/../..' . '/app/Base/Config/Database.php',
+        'Base\\Config\\UserDatabase' => __DIR__ . '/../..' . '/app/Base/Config/UserDatabase.php',
         'Core\\Routing' => __DIR__ . '/../..' . '/app/Core/Routing.php',
         'FastRoute\\BadRouteException' => __DIR__ . '/..' . '/nikic/fast-route/src/BadRouteException.php',
         'FastRoute\\DataGenerator' => __DIR__ . '/..' . '/nikic/fast-route/src/DataGenerator.php',
