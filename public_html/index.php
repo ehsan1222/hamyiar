@@ -5,6 +5,7 @@ use \Psr\Http\Message\ServerRequestInterface as Request;
 use \Psr\Http\Message\ResponseInterface as Response;
 use Base\Config\Database;
 use Base\Config\UserDatabase;
+use Base\Middleware\UserMiddleware;
 
 require_once __DIR__.'/../vendor/autoload.php';
 
@@ -15,7 +16,7 @@ $configuration = [
 ];
 
 $c = new \Slim\Container($configuration);
-$app = new \Slim\App($c);
+$app = new \Slim\App();
 
 $app->post('/register', function(Request $request, Response $response, array $args){
     //get data from HTTP POST
@@ -101,6 +102,42 @@ $app->post('/register', function(Request $request, Response $response, array $ar
 
     return $response;
 });
+
+
+$app->get('/user/information', function(Request $request, Response $response, array $args){
+    $data = $request->getHeaders();
+    
+    $output = array();
+    if(empty($data["HTTP_AUTHENTICATION_INFO"])){
+        $output = [
+            ["error"=>true, "message" => "api_key is not set"]
+        ];
+    }else{
+        $api_key = validate_data($data["HTTP_AUTHENTICATION_INFO"][0]);
+        $connection    = new Database();
+        $user_database = new UserDatabase($connection->connect());
+        $result = $user_database->get_user($api_key);
+        $output = [
+            ["error"=>false, "message" => null],
+            [
+                'name_family'  =>$result['name_family'],
+                'email'        =>$result['email'],
+                'mobile_number'=>$result['mobile_number'],
+                'gender'       =>$result['gender'],
+                'score'        =>$result['score'],
+                'account_card' =>$result['account_card'],
+                'username'     =>$result['username']
+            ]
+        ];
+    }
+    $response->getBody()->write(json_encode($output));
+    return $response;
+});
+
+
+// $app->get('/foo', function(Request $request, Response $response, array $args){
+//     echo "fooooo";
+// })->add(new UserMiddleware());
 
 $app->get('/test/users', function(Request $request, Response $response, array $args){
     $arr = array();
