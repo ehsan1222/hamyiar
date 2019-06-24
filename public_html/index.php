@@ -3,10 +3,39 @@ ini_set('display_errors', '1');
 
 use \Psr\Http\Message\ServerRequestInterface as Request;
 use \Psr\Http\Message\ResponseInterface as Response;
+use Base\Config\Database;
+use Base\Config\UserDatabase;
 
 require_once __DIR__.'/../vendor/autoload.php';
 
 $app = new \Slim\App;
+
+$app->post('/register', function(Request $request, Response $response, array $args){
+    //get data from HTTP POST
+    $data = $request->getParsedBody();
+
+    $name_family = $data['name_family'];
+    $email       = $data['email'];
+    $username    = $data['username'];
+    $password    = $data['password'];
+    
+    // store validate value in array
+    $arr = [
+        "name_family" => $name_family,
+        "email"       => $email,
+        "username"    => $username,
+        "password"    => $password
+    ];
+
+    // connect to database
+    $database   = new Database();
+    $connection = $database->connect();
+    
+    $user_database = new UserDatabase($connection);
+    $api_key = $user_database->add_user($arr);
+    $database->disconnect();
+    return $api_key;
+});
 
 $app->get('/test/users', function(Request $request, Response $response, array $args){
     $arr = array();
