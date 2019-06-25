@@ -142,6 +142,7 @@ $app->get('/user/information', function(Request $request, Response $response, ar
                 ]
             ];
         }
+        $connection->disconnect();
     }
     $response->getBody()->write(json_encode($output));
     return $response;
@@ -206,7 +207,7 @@ $app->put('/user/information', function(Request $request, Response $response, ar
                 ["error"=>true, "message" => "update failed"]
             ];
         }
-        $database->disconnect();
+        
     }
     $response->getBody()->write(json_encode($output));
     return $response;
@@ -257,6 +258,7 @@ $app->post('/login', function(Request $request, Response $response, array $args)
                 ["api_key" => $api_key]
             ];  
         }
+        $database->disconnect();
     }
     $response->getBody()->write(json_encode($output));
     return $response;
