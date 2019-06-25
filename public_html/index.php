@@ -5,6 +5,7 @@ use \Psr\Http\Message\ServerRequestInterface as Request;
 use \Psr\Http\Message\ResponseInterface as Response;
 use Base\Config\Database;
 use Base\Config\UserDatabase;
+use Base\Config\CompanyDatabase;
 use Base\Middleware\UserMiddleware;
 
 require_once __DIR__.'/../vendor/autoload.php';
@@ -266,8 +267,130 @@ $app->post('/login', function(Request $request, Response $response, array $args)
 //------------------------------
 
 //Company-----------------------
+// add new company
+$app->post('/companies/add', function(Request $request, Response $response, array $args){
+    $header = $request -> getHeaders();
+    $data   = $request -> getParsedBody();
 
+    $api_key        = isset($header["HTTP_AUTHENTICATION_INFO"][0]) ? validate_data($header["HTTP_AUTHENTICATION_INFO"][0]) : '';
+    $c_name         = isset($data['c_name']) ? validate_data($data['c_name']) : ''; 
+    $c_address      = isset($data['c_address']) ? validate_data($data['c_address']) : ''; 
+    $c_email        = isset($data['c_email']) ? validate_data($data['c_email']) : ''; 
+    $c_founded_date = isset($data['c_founded_date']) ? validate_data('Y-m-d', strtotime($data['c_founded_date'])): '0000-00-00'; 
+    $c_description  = isset($data['c_description']) ? validate_data($data['c_description']) : ''; 
+    $c_tel          = isset($data['c_tel']) ? validate_data($data['c_tel']) : '';
+    $position       = isset($data['position']) ? validate_data($data['position']) : '';
+    
+    if (empty($api_key)) {
+        $output = [
+            ["error"=> true, "message"=>"api_key isn't set"]
+        ];
+    } else if(empty($position)){
+        $output = [
+            ["error"=> true, "message"=>"position isn't set"]
+        ];
+    }else if(empty($c_name)){
+        $output = [
+            ["error"=> true, "message"=>"c_name isn't set"]
+        ];
+    } else if(empty($c_address)){
+        $output = [
+            ["error"=> true, "message"=>"c_address isn't set"]
+        ];
+    } else if(empty($c_email)){
+        $output = [
+            ["error"=> true, "message"=>"c_email isn't set"]
+        ];
+    } else if(empty($c_founded_date)){
+        $output = [
+            ["error"=> true, "message"=>"c_founded_date isn't set"]
+        ];
+    } else if(empty($c_description)){
+        $output = [
+            ["error"=> true, "message"=>"c_description isn't set"]
+        ];
+    } else if(empty($c_tel)){
+        $output = [
+            ["error"=> true, "message"=>"c_tel isn't set"]
+        ];
+    } else if( (strlen($c_tel) != 11) || (!preg_match('/^[0-9]*$/', $c_tel) ) ){
+        $output = [
+            ["error"=> true, "message"=>"format c_tel isn't correct"]
+        ];
+    } else if (!filter_var($c_email, FILTER_VALIDATE_EMAIL)) {
+        $output = [
+            ["error"=> true, "message"=>"invalid c_email format"]
+        ]; 
+    } else{
+        $database   = new Database();
+        $connection = $database->connect();
 
+        $company_database = new CompanyDatabase($connection);
+        $arr = [
+            'c_name'         => $c_name,
+            'c_address'      => $c_address,
+            'c_email'        => $c_email,
+            'c_founded_date' => $c_founded_date,
+            'c_description'  => $c_description,
+            'c_tel'          => $c_tel
+        ];
+
+        // get user information
+        $user_database    = new UserDatabase($connection);
+        $user_information = $user_database -> get_user($api_key);
+        if(empty($user_information)){
+            $output = [
+                ["error"=> true, "message"=>"api_key isn't valid"]
+            ]; 
+        }else{
+            $result = $company_database->add_company($arr);
+            if(empty($result)){
+                $output = [
+                    ["error"=> true, "message"=>"company doesn't created"]
+                ]; 
+            }else{
+                // get this company information
+                $arr = [
+                    'c_name'  => $c_name,
+                    'c_email' => $c_email
+                ];
+                $company_information = $company_database->get_company($arr);
+                if(empty($company_information)){
+                    $output = [
+                        ["error"=> true, "message"=>"company doesn't exists"]
+                    ];  
+                } else{
+                    $arr = [
+                        'user_id' => $user_information['id'],
+                        'company_id'    => $company_information['id'],
+                        'position'=> $position
+                    ];
+
+                    $result = $company_database->add_member($arr);
+                    if(empty($result)){
+                        $output = [
+                            ["error"=> true, "message"=>"member doesn't add"]
+                        ]; 
+                    }else{
+                        $output = [
+                            ["error"=> false, "message"=>null]
+                        ]; 
+                    }
+                }
+            }
+        }
+
+        $database->disconnect();
+    }
+
+    $response -> getBody() -> write(json_encode($output));
+    return $response;
+});
+
+// get all companies data
+$app->get('/companies', function(Request $request, Response $response, array $args){
+
+});
 
 //------------------------------
 
