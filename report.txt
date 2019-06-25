@@ -36,7 +36,7 @@ form parameters	in body:
 	name_family   : string
 	mobile_number : string
 	gender        : int  	      // (0-> female,  1->male)
-	account_card: string
+	account_card  : string
 	birthday_date : string        // (1997-04-06)
 	email         : string
 
@@ -76,7 +76,7 @@ output:
 			]
 		    ]	
 ===========================================================
-POST URL: /companies/add
+POST URL: /companies/add  -> add new company
 form header:
 	Authentication-Info: string   // api_key
 form parameter:
@@ -90,3 +90,13 @@ form parameter:
 output:
 	json output:[error:bool, message: string]
 ============================================================
+POST URL /companies/add/member  -> add member to existing company
+form header:
+	Authentication-Info: string   // api_key
+form parameter:
+	company_id: int
+	username  : string
+	position  : string
+output:
+	json output: [error: bool, message:string]
+=============================================================
