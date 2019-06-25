@@ -33,6 +33,27 @@ class ProjectDatabase{
         return null;
     }
 
+    public function get_all_projects(){
+        $sql = "SELECT * FROM {$this->project_table}";
+        $result = $this -> connection->query($sql);
+        if($result->num_rows > 0){
+            $arr = array();
+            while ($row = $result->fetch_assoc()) {
+                $arr[] = array(
+                    'id'            => $row['id'],
+                    'p_name'        => $row['p_name'],
+                    'p_description' => $row['p_description'],
+                    'p_start_date'  => $row['p_start_date'],
+                    'p_finish_date' => $row['p_finish_date'],
+                    'p_budget'      => $row['p_budget'],
+                    'p_fouded'      => $row['p_founded']
+                );
+            }
+            return $arr;
+        }
+        return null;
+    }
+
     public function add_project_member($information){
         $sql = "INSERT INTO {$this->project_member_table} (user_id, project_id, position) VALUES 
         ({$information['user_id']}, {$information['project_id']}, '{$information['position']}')";

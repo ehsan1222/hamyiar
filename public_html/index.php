@@ -517,7 +517,22 @@ $app->get('/companies', function(Request $request, Response $response, array $ar
 
 // return all projects
 $app->get('/projects', function(Request $request, Response $response, array $args){
-
+    $database   = new Database();
+    $connection = $database->connect();
+    $project_database = new ProjectDatabase($connection); 
+    $project_informations = $project_database->get_all_projects();
+    $output = array();
+    if(empty($project_informations)){
+        $output = [
+            ["error"=> true, "message"=>"nothing to show"]
+        ];
+    }else{
+        $output[] = ["error"=>false, "message"=>null];
+        $output[] = $project_informations;
+    }
+    $database->disconnect();
+    $response->getBody()->write(json_encode($output));
+    return $response;
 });
 
 $app->post('/projects', function(Request $request, Response $response, array $args){
