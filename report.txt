@@ -100,3 +100,35 @@ form parameter:
 output:
 	json output: [error: bool, message:string]
 =============================================================
+GET URL: /projects   -> get all projects
+output:
+	json output:[
+			[error:bool, message : string],
+			[
+				[
+					id            : int,
+					p_name        :string,
+					p_description :string,
+					p_start_date  : date,
+					p_finish_date : date,
+					p_budget      : int,
+					p_founded     : int
+				],
+				[
+					......
+				],
+				.......
+			]
+		    ]		
+===============================================================
+POST URL: /projects
+form header:
+	Authentication-Info: string   // api_key
+form parameter:
+		p_name        :string
+		p_description :string
+		p_start_date  : date
+		p_finish_date : date
+		p_budget      : int
+		position      : string
+================================================================
