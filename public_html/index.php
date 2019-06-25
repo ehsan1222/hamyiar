@@ -727,6 +727,35 @@ $app->post('/projects/phases', function(Request $request, Response $response, ar
     return $response;
 });
 
+$app->get('/projects/phases/{project_id}', function(Request $request, Response $response, array $args){
+
+    $project_id = $args['project_id'];
+
+    $database = new Database();
+    $connection = $database->connect();
+
+    $arr = [
+        'project_id' => $project_id
+    ];
+
+    $project_database = new ProjectDatabase($connection);
+    $project_phase_information = $project_database->get_phases($arr);
+
+    $output = array();
+    if(empty($project_phase_information)){
+        $output = [
+            ["error"=> true, "message"=>"project_id isn't valid or project have any phase"]
+        ];
+    }else{
+        $output [] = array("error"=> false, "message"=>null);
+        $output [] = $project_phase_information;
+    }
+
+    $database->disconnect();
+
+    $response->getBody()->write(json_encode($output));
+    return $response;
+});
 
 $app->run();
 

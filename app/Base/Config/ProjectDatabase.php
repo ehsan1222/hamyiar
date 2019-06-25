@@ -87,4 +87,23 @@ class ProjectDatabase{
         return null;
     }
 
+    public function get_phases($information){
+        $sql = "SELECT * FROM {$this->project_phase_table} WHERE project_id={$information['project_id']}";
+        $result = $this->connection->query($sql);
+        if($result->num_rows > 0){
+           $arr = array();
+            while($row = $result->fetch_assoc()){
+                $arr[] = array(
+                    "id"         => $row['id'],
+                    'project_id' => $row['project_id'],
+                    "start_date" => $row['start_date'],
+                    'finish_date'=> $row['finish_date'],
+                    'budget'     => $row['budget']
+                );
+           }
+           return $arr; 
+        }
+        return null;
+    }
+
 }
