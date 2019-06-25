@@ -19,7 +19,10 @@ $configuration = [
 $c   = new \Slim\Container($configuration);
 $app = new \Slim\App($c);
 
-//USER-------------------------
+//-------------------------------------------------------------------------
+//---------------------------------- User ---------------------------------
+//-------------------------------------------------------------------------
+
 // add new user
 $app->post('/register', function(Request $request, Response $response, array $args){
     //get data from HTTP POST
@@ -264,9 +267,10 @@ $app->post('/login', function(Request $request, Response $response, array $args)
     $response->getBody()->write(json_encode($output));
     return $response;
 });
-//------------------------------
 
-//Company-----------------------
+//-------------------------------------------------------------------------
+//---------------------------------- Company ------------------------------
+//-------------------------------------------------------------------------
 // add new company
 $app->post('/companies/add', function(Request $request, Response $response, array $args){
     $header = $request -> getHeaders();
@@ -389,10 +393,27 @@ $app->post('/companies/add', function(Request $request, Response $response, arra
 
 // get all companies data
 $app->get('/companies', function(Request $request, Response $response, array $args){
+    $database   = new Database();
+    $connection = $database -> connect();
+    
+    $company_database = new CompanyDatabase($connection);
+    $result = $company_database->get_all_companies();
+    $output = array();
+    if(empty($result)){
+        $output = [
+            ["error"=> true, "message"=>"no company founded"]
+        ];
+    }else{
+        $output [] = ["error"=> false, "message"=>null];
+        $output [] = $result;
+    }
+    $database->disconnect();
 
+    $response->getBody()->write(json_encode($output));
+    return $response;
 });
 
-//------------------------------
+//----------------------------------------
 
 
 $app->run();

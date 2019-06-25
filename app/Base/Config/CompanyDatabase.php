@@ -47,6 +47,27 @@ class CompanyDatabase{
         return null;
     }
 
+    public function get_all_companies(){
+        $sql = "SELECT * FROM company";
+        $result = $this->connection->query($sql);
+        if($result -> num_rows <=0){
+            return null;
+        }
+        $arr = array();
+        while($row = $result->fetch_assoc()){
+            $tmp = [
+                'id' => $row['id'],
+                'c_name' => $row['c_name'],
+                'c_address' => $row['c_address'],
+                'c_email' => $row['c_founded_date'],
+                'c_description' => $row['c_description'],
+                'c_tel' => $row['c_tel']
+            ];
+            $arr[] = $tmp;
+        }
+        return $arr;
+    }
+
     public function remove_company($information){
 
     }
