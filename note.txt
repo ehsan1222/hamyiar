@@ -144,8 +144,9 @@ form parameter:
 output:
 	json output:[error :bool, message:string]
 ================================================================
-GET URL: /projects/phases/{project_id}
-
+GET URL: /projects/phases
+query params:
+	project_id: int
 output:
 	json output:[
 			[error:bool, message : string],
