@@ -79,7 +79,7 @@ class UserDatabase{
         }
         return null;
     }
-
+    
     // check username is already exists or not
     public function is_exists_username($username){
         $sql = "SELECT * FROM {$this->table_name} WHERE username='$username'";

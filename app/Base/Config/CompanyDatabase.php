@@ -68,8 +68,28 @@ class CompanyDatabase{
         return $arr;
     }
 
-    public function remove_company($information){
+    public function get_company_information($information){
+        $company_id = $information['id'];
+        $sql = "SELECT * FROM company WHERE id={$company_id}";
+    
+        $result = $this->connection->query($sql);
+        if($result->num_rows > 0){
+            return $result->fetch_assoc();
+        }else{
+            return null;
+        }
+    }
 
+    public function is_member_in_company($information){
+        $user_id    = $information['user_id'];
+        $company_id = $information['company_id'];
+        
+        $sql = "SELECT * FROM {$this->member_table} WHERE user_id={$user_id} AND company_id={$company_id}";
+        $result = $this->connection->query($sql);
+        if($result->num_rows > 0){
+            return true;
+        }
+        return false;
     }
 
 }

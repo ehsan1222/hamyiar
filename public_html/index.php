@@ -81,7 +81,7 @@ $app->post('/register', function(Request $request, Response $response, array $ar
             $user_database = new UserDatabase($connection->connect());
             
             // check username not reserved
-            if($user_database->is_exists_username($username)){
+            if(!empty($user_database->is_exists_username($username))){
                 $output = [
                     ["error"=> true, "message"=>"username already exists"]
                 ]; 
@@ -161,7 +161,7 @@ $app->put('/user/information', function(Request $request, Response $response, ar
     $name_family    = isset($data['name_family']) ? validate_data($data['name_family']) : '';
     $mobile_number  = isset($data['mobile_number']) ? validate_data($data['mobile_number']) : '';
     $gender         = isset($data['gender']) ? $data['gender'] : 0;
-    $account_number = isset($data['account_number']) ? validate_data($data['account_number']) : '';
+    $account_card   = isset($data['account_card']) ? validate_data($data['account_card']) : '';
     $birthday_date  = isset($data['birthday_date']) ? date('Y-m-d', strtotime($data['birthday_date'])): '0000-00-00';
     $email          = isset($data['email']) ? validate_data($data['email']) : '';
     
@@ -196,7 +196,7 @@ $app->put('/user/information', function(Request $request, Response $response, ar
             'name_family'    => $name_family,
             'mobile_number'  => $mobile_number,
             'gender'         => $gender,
-            'account_number' => $account_number,
+            'account_card'   => $account_card,
             'birthday_date'  => $birthday_date,
             'email'          => $email
         ];
@@ -390,6 +390,103 @@ $app->post('/companies/add', function(Request $request, Response $response, arra
     $response -> getBody() -> write(json_encode($output));
     return $response;
 });
+
+// add new memeber to company
+$app->post('/companies/add/member', function(Request $request, Response $response, array $args){
+    $header = $request -> getHeaders();
+    $data   = $request -> getParsedBody();
+
+    $api_key    = isset($header["HTTP_AUTHENTICATION_INFO"][0]) ? validate_data($header["HTTP_AUTHENTICATION_INFO"][0]) : '';
+    $company_id = isset($data['company_id']) ? validate_data($data['company_id']) : "";
+    $username   = isset($data['username']) ? validate_data($data['username']) : "";
+    $position   = isset($data['position']) ? validate_data($data['position']) : "";
+    
+    $output = array();
+    if (empty($api_key)) {
+        $output = [
+            ["error"=> true, "message"=>"api_key isn't set"]
+        ];
+    } else if(empty($company_id)){
+        $output = [
+            ["error"=> true, "message"=>"company_id isn't set"]
+        ];
+    } else if(empty($username)){
+        $output = [
+            ["error"=> true, "message"=>"username isn't set"]
+        ];
+    } else if(empty($position)){
+        $output = [
+            ["error"=> true, "message"=>"position isn't set"]
+        ];
+    } else{
+        $database   = new Database();
+        $connection = $database->connect();
+
+        // check api_key is valid
+        $user_database    = new UserDatabase($connection);
+        $company_database = new CompanyDatabase($connection);
+        $user_information = $user_database->get_user($api_key);
+        if(empty($user_information)){
+            $output = [
+                ["error"=> true, "message"=>"api_key isn't valid"]
+            ];
+        }else{
+            // check this user can add member to specific company 
+            $arr=[
+                'user_id'    => $user_information['id'],
+                'company_id' => $company_id
+            ];
+            $result = $company_database -> is_member_in_company($arr);
+            if(!$result){
+                $output = [
+                    ["error"=> true, "message"=>"api_key can't add member"]
+                ];
+            }else{
+                // get user id for add to member table
+                $result = $user_database->is_exists_username($username);
+                if(empty($result)){
+                    $output = [
+                        ["error"=> true, "message"=>"username not found"]
+                    ];
+                }else{
+                    //check if member already be in this row
+                    $arr=[
+                        'user_id'    => $result['id'],
+                        'company_id' => $company_id
+                    ];
+                    $result = $company_database -> is_member_in_company($arr);
+                    if(empty($result)){
+                        $arr=[
+                            "user_id"    => $result['id'],
+                            'company_id' => $company_id,
+                            "position"   => $position
+                        ];
+                        $result = $company_database -> add_member($arr);
+                        if(empty($result)){
+                            $output = [
+                                ["error"=> true, "message"=>"add member failed"]
+                            ];
+                        }else{
+                            $output = [
+                                ["error"=> false, "message"=>"add member done"]
+                            ];
+                        }
+                    }else{
+                        $output = [
+                            ["error"=> true, "message"=>"username alredy been in this company"]
+                        ];
+                    }
+                }
+
+            }
+        
+        }
+        $database->disconnect();
+    }
+    $response->getBody()->write(json_encode($output));
+    return $response;
+});
+
 
 // get all companies data
 $app->get('/companies', function(Request $request, Response $response, array $args){
