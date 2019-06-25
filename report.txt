@@ -1,0 +1,57 @@
+BASE_URL = hamyiar.ir
+***************************
+POST URL:/register
+-----------------
+form parameter in body:
+	name_family :string
+	email	    :string
+	username    :string
+	password    :string
+output:
+	json output:[
+			error   : boolean,
+			message : string
+		    ]
+=======================================================
+GET  URL:/user/information
+------------------
+Header parameter:
+	Authentication-Info: string   // api_key
+output:
+	json output:[
+			name_family  : string,
+			email        :string,
+			mobile_number: string,
+			gender       : int,
+			birthday_date: date,
+			score        : int,
+			account_card : string,
+			username     : string
+		    ]
+========================================================
+PUT URL:/user/information
+Header parameter:
+	Authentication-Info: string   // api_key
+form parameters	in body:
+	name_family   : string
+	mobile_number : string
+	gender        : int  	      // (0-> female,  1->male)
+	account_card: string
+	birthday_date : string        // (1997-04-06)
+	email         : string
+
+output:
+	json output:[
+			error : bool  , message : string
+		    ]
+=========================================================
+POST URL:/login
+form parameter:
+	username: string
+	password: string
+output:
+	json output:[
+			[error : bool, message: string]        // {....} if error is false then {} 
+			{,[api_key: string]}                   //  exists else {} doesn't exist
+		    ]
+=========================================================	
