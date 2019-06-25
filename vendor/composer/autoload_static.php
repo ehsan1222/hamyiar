@@ -80,6 +80,7 @@ class ComposerStaticInit6737114585d368839390e8858d1e5bd7
     );
 
     public static $classMap = array (
+        'Base\\Config\\CompanyDatabase' => __DIR__ . '/../..' . '/app/Base/Config/CompanyDatabase.php',
         'Base\\Config\\Database' => __DIR__ . '/../..' . '/app/Base/Config/Database.php',
         'Base\\Config\\UserDatabase' => __DIR__ . '/../..' . '/app/Base/Config/UserDatabase.php',
         'Base\\Middleware\\UserMiddleware' => __DIR__ . '/../..' . '/app/Base/Middleware/UserMiddleware.php',
