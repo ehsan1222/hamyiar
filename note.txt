@@ -121,7 +121,7 @@ output:
 			]
 		    ]		
 ===============================================================
-POST URL: /projects
+POST URL: /projects	-> return all projects
 form header:
 	Authentication-Info: string   // api_key
 form parameter:
@@ -132,3 +132,35 @@ form parameter:
 		p_budget      : int
 		position      : string
 ================================================================
+POST URL: /projects/phases  -> add phase to a project
+form header:
+	Authentication-Info: string   // api_key
+form parameter:
+	project_id : string
+	start_date : date
+	finish_date: date
+	description: string
+	budget     : int
+output:
+	json output:[error :bool, message:string]
+================================================================
+GET URL: /projects/phases/{project_id}
+
+output:
+	json output:[
+			[error:bool, message : string],
+			[
+				[
+					id            : int,
+					priject_id    : int,
+					start_date    : date
+					finish_date   : date,
+					description   : string,
+					budget        : int
+				],
+				[
+					......
+				],
+				.......
+			]
+		    ]
