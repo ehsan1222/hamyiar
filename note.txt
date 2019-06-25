@@ -1,0 +1,134 @@
+BASE_URL = hamyiar.ir
+***************************
+POST URL:/register
+-----------------
+form parameter in body:
+	name_family :string
+	email	    :string
+	username    :string
+	password    :string
+output:
+	json output:[
+			error   : boolean,
+			message : string
+		    ]
+=======================================================
+GET  URL:/user/information
+------------------
+Header parameter:
+	Authentication-Info: string   // api_key
+output:
+	json output:[
+			name_family  : string,
+			email        :string,
+			mobile_number: string,
+			gender       : int,
+			birthday_date: date,
+			score        : int,
+			account_card : string,
+			username     : string
+		    ]
+========================================================
+PUT URL:/user/information
+Header parameter:
+	Authentication-Info: string   // api_key
+form parameters	in body:
+	name_family   : string
+	mobile_number : string
+	gender        : int  	      // (0-> female,  1->male)
+	account_card  : string
+	birthday_date : string        // (1997-04-06)
+	email         : string
+
+output:
+	json output:[
+			error : bool  , message : string
+		    ]
+=========================================================
+POST URL:/login
+form parameter:
+	username: string
+	password: string
+output:
+	json output:[
+			[error : bool, message: string]        // {....} if error is false then {} 
+			{,[api_key: string]}                   //  exists else {} doesn't exist
+		    ]
+=========================================================
+GET URL: /companies  -> get all companies' information
+output:
+	json output:[
+			[error:bool, message : string],
+			[
+				[
+					id            : int,
+					c_name        :string,
+					c_address     :string,
+					c_email       : string,
+					c_founded_date:date,
+					c_description : string,
+					c_tel         : string(11)
+				],
+				[
+					......
+				],
+				.......
+			]
+		    ]	
+===========================================================
+POST URL: /companies/add  -> add new company
+form header:
+	Authentication-Info: string   // api_key
+form parameter:
+	c_name         : string
+    	c_address      : string      
+    	c_email        : string        
+    	c_founded_date :date
+    	c_description  : string   
+    	c_tel 	       :string(11)          
+    	position       : string      
+output:
+	json output:[error:bool, message: string]
+============================================================
+POST URL /companies/add/member  -> add member to existing company
+form header:
+	Authentication-Info: string   // api_key
+form parameter:
+	company_id: int
+	username  : string
+	position  : string
+output:
+	json output: [error: bool, message:string]
+=============================================================
+GET URL: /projects   -> get all projects
+output:
+	json output:[
+			[error:bool, message : string],
+			[
+				[
+					id            : int,
+					p_name        :string,
+					p_description :string,
+					p_start_date  : date,
+					p_finish_date : date,
+					p_budget      : int,
+					p_founded     : int
+				],
+				[
+					......
+				],
+				.......
+			]
+		    ]		
+===============================================================
+POST URL: /projects
+form header:
+	Authentication-Info: string   // api_key
+form parameter:
+		p_name        :string
+		p_description :string
+		p_start_date  : date
+		p_finish_date : date
+		p_budget      : int
+		position      : string
+================================================================
