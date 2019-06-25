@@ -18,6 +18,7 @@ $configuration = [
 $c   = new \Slim\Container($configuration);
 $app = new \Slim\App($c);
 
+//USER-------------------------
 // add new user
 $app->post('/register', function(Request $request, Response $response, array $args){
     //get data from HTTP POST
@@ -122,19 +123,25 @@ $app->get('/user/information', function(Request $request, Response $response, ar
         $connection    = new Database();
         $user_database = new UserDatabase($connection->connect());
         $result = $user_database->get_user($api_key);
-        $output = [
-            ["error"=>false, "message" => null],
-            [
-                'name_family'  => $result['name_family'],
-                'email'        => $result['email'],
-                'mobile_number'=> $result['mobile_number'],
-                'gender'       => $result['gender'],
-                'score'        => $result['score'],
-                'account_card' => $result['account_card'],
-                'username'     => $result['username'],
-                'birthday_date'=> $result['birthday_date']
-            ]
-        ];
+        if(empty($result)){
+            $output = [
+                ["error"=>true, "message" => "api_key is not set"]
+            ];
+        }else{
+            $output = [
+                ["error"=>false, "message" => null],
+                [
+                    'name_family'  => $result['name_family'],
+                    'email'        => $result['email'],
+                    'mobile_number'=> $result['mobile_number'],
+                    'gender'       => $result['gender'],
+                    'score'        => $result['score'],
+                    'account_card' => $result['account_card'],
+                    'username'     => $result['username'],
+                    'birthday_date'=> $result['birthday_date']
+                ]
+            ];
+        }
     }
     $response->getBody()->write(json_encode($output));
     return $response;
@@ -254,7 +261,13 @@ $app->post('/login', function(Request $request, Response $response, array $args)
     $response->getBody()->write(json_encode($output));
     return $response;
 });
+//------------------------------
 
+//Company-----------------------
+
+
+
+//------------------------------
 
 
 $app->run();

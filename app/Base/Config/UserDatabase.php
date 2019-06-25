@@ -36,12 +36,12 @@ class UserDatabase{
     }
     
     public function get_user($api_key){
-        $sql = "SELECT * FROM users Where api_key='$api_key'";
+        $sql = "SELECT * FROM users WHERE api_key='{$api_key}'";
         $result = $this->connection->query($sql);
         if($result->num_rows > 0){
             return $result->fetch_assoc();
         }else{
-            return "api_key isn't correct";
+            return null;
         } 
     }
 
