@@ -6,6 +6,8 @@ class ProjectDatabase{
 
     private $project_table        = "project";
     private $project_member_table = "project_member";
+    private $project_phase_table  = "project_phase";
+
     private $connection;
     
     public function __construct($connection){
@@ -57,6 +59,27 @@ class ProjectDatabase{
     public function add_project_member($information){
         $sql = "INSERT INTO {$this->project_member_table} (user_id, project_id, position) VALUES 
         ({$information['user_id']}, {$information['project_id']}, '{$information['position']}')";
+
+        if($this->connection->query($sql)){
+            return "done";
+        }
+        return null;
+    }
+
+    public function is_in_project_member($information){
+        $sql = "SELECT * FROM {$this->project_member_table} WHERE user_id={$information['user_id']} AND project_id={$information['project_id']}";
+        
+        $result = $this->connection->query($sql);
+        if($result->num_rows > 0){
+            return true;
+        }
+        return false;
+    }
+
+    public function add_project_phase($information){
+        $sql = "INSERT INTO {$this->project_phase_table} (project_id, start_date, finish_date, description, budget) VALUES 
+            ({$information['project_id']}, '{$information['start_date']}', '{$information['finish_date']}', '{$information['description']}',
+            {$information['budget']})";
 
         if($this->connection->query($sql)){
             return "done";

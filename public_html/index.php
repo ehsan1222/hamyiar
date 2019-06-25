@@ -535,6 +535,7 @@ $app->get('/projects', function(Request $request, Response $response, array $arg
     return $response;
 });
 
+// add new project
 $app->post('/projects', function(Request $request, Response $response, array $args){
     $header = $request -> getHeaders();
     $data   = $request -> getParsedBody();
@@ -637,6 +638,90 @@ $app->post('/projects', function(Request $request, Response $response, array $ar
         }
 
         $database->disconnect();
+    }
+    $response->getBody()->write(json_encode($output));
+    return $response;
+});
+
+// add new phase
+$app->post('/projects/phases', function(Request $request, Response $response, array $args){
+    $header = $request -> getHeaders();
+    $data   = $request -> getParsedBody();
+
+    $api_key     = isset($header["HTTP_AUTHENTICATION_INFO"][0]) ? validate_data($header["HTTP_AUTHENTICATION_INFO"][0]) : '';
+    $project_id  = isset($data['project_id']) ? validate_data($data['project_id']) : "";
+    $start_date  = isset($data['start_date']) ? validate_data(date($data['start_date'])) : "";
+    $finish_date = isset($data['finish_date']) ? validate_data(date($data['finish_date'])) : "";
+    $description = isset($data['description']) ? validate_data($data['description']) : "";
+    $budget      = isset($data['budget']) ? validate_data($data['budget']) : "";
+    $output = array();
+    if(empty($api_key)){
+        $output = [
+            ["error"=> false, "message"=>"api_key isn't set"]
+        ];
+    } else if(empty($project_id)){
+        $output = [
+            ["error"=> true, "message"=>"project_id isn't set"]
+        ];
+    } else if(empty($start_date)){
+        $output = [
+            ["error"=> true, "message"=>"start_date isn't set"]
+        ];
+    } else if(empty($finish_date)){
+        $output = [
+            ["error"=> true, "message"=>"finish_date isn't set"]
+        ];
+    } else if(empty($description)){
+        $output = [
+            ["error"=> true, "message"=>"description isn't set"]
+        ];
+    } else if(empty($budget)){
+        $output = [
+            ["error"=> true, "message"=>"budget isn't set"]
+        ];
+    } else{
+        $database   = new Database();
+        $connection = $database->connect();
+        
+        $user_database    = new UserDatabase($connection);
+        $project_database = new ProjectDatabase($connection);
+        
+        $user_information = $user_database->get_user($api_key);
+        if(empty($user_information)){
+            $output = [
+                ["error"=> true, "message"=>"api_key isn't valid"]
+            ];
+        }else{
+            // check this user is member of project
+            $arr = [
+                'user_id'    => $user_information['id'],
+                'project_id' => $project_id 
+            ];
+            if($project_database -> is_in_project_member($arr)){
+                $arr = [
+                    'project_id' => $project_id,
+                    'start_date' => $start_date,
+                    'finish_date'=> $finish_date,
+                    'description'=> $description,
+                    'budget'     => $budget
+                ];
+                $result = $project_database -> add_project_phase($arr);
+                if(empty($result)){
+                    $output = [
+                        ["error"=> true, "message"=>"project phase doesn't add"]
+                    ];
+                }else{
+                    $output = [
+                        ["error"=> false, "message"=>null]
+                    ];
+                }
+            }else{
+                $output = [
+                    ["error"=> true, "message"=>"api_key doesn't permissed to add phase in this project"]
+                ];
+            }
+        }
+        $database -> disconnect();
     }
     $response->getBody()->write(json_encode($output));
     return $response;
