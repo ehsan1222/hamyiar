@@ -85,7 +85,7 @@ class UserDatabase{
         $sql = "SELECT * FROM {$this->table_name} WHERE username='$username'";
         $result = $this->connection->query($sql);
         if($result->num_rows > 0){
-            return "username already exists";
+            return $result->fetch_assoc();
         }else{
             return null;
         }
