@@ -54,4 +54,39 @@ output:
 			[error : bool, message: string]        // {....} if error is false then {} 
 			{,[api_key: string]}                   //  exists else {} doesn't exist
 		    ]
-=========================================================	
+=========================================================
+GET URL: /companies  -> get all companies' information
+output:
+	json output:[
+			[error:bool, message : string],
+			[
+				[
+					id            : int,
+					c_name        :string,
+					c_address     :string,
+					c_email       : string,
+					c_founded_date:date,
+					c_description : string,
+					c_tel         : string(11)
+				],
+				[
+					......
+				],
+				.......
+			]
+		    ]	
+===========================================================
+POST URL: /companies/add
+form header:
+	Authentication-Info: string   // api_key
+form parameter:
+	c_name         : string
+    	c_address      : string      
+    	c_email        : string        
+    	c_founded_date :date
+    	c_description  : string   
+    	c_tel 	       :string(11)          
+    	position       : string      
+output:
+	json output:[error:bool, message: string]
+============================================================
