@@ -7,6 +7,7 @@ use Base\Config\Database;
 use Base\Config\UserDatabase;
 use Base\Config\CompanyDatabase;
 use Base\Middleware\UserMiddleware;
+use Base\Config\ProjectDatabase;
 
 require_once __DIR__.'/../vendor/autoload.php';
 
@@ -162,7 +163,7 @@ $app->put('/user/information', function(Request $request, Response $response, ar
     $mobile_number  = isset($data['mobile_number']) ? validate_data($data['mobile_number']) : '';
     $gender         = isset($data['gender']) ? $data['gender'] : 0;
     $account_card   = isset($data['account_card']) ? validate_data($data['account_card']) : '';
-    $birthday_date  = isset($data['birthday_date']) ? date('Y-m-d', strtotime($data['birthday_date'])): '0000-00-00';
+    $birthday_date  = isset($data['birthday_date']) ? date(date('Y-m-d', strtotime($data['birthday_date']))): '';
     $email          = isset($data['email']) ? validate_data($data['email']) : '';
     
     $output = array();
@@ -280,7 +281,7 @@ $app->post('/companies/add', function(Request $request, Response $response, arra
     $c_name         = isset($data['c_name']) ? validate_data($data['c_name']) : ''; 
     $c_address      = isset($data['c_address']) ? validate_data($data['c_address']) : ''; 
     $c_email        = isset($data['c_email']) ? validate_data($data['c_email']) : ''; 
-    $c_founded_date = isset($data['c_founded_date']) ? validate_data('Y-m-d', strtotime($data['c_founded_date'])): '0000-00-00'; 
+    $c_founded_date = isset($data['c_founded_date']) ? validate_data(date('Y-m-d', strtotime($data['c_founded_date']))): ''; 
     $c_description  = isset($data['c_description']) ? validate_data($data['c_description']) : ''; 
     $c_tel          = isset($data['c_tel']) ? validate_data($data['c_tel']) : '';
     $position       = isset($data['position']) ? validate_data($data['position']) : '';
@@ -510,7 +511,121 @@ $app->get('/companies', function(Request $request, Response $response, array $ar
     return $response;
 });
 
-//----------------------------------------
+//-------------------------------------------------------------------------
+//---------------------------------- Project ------------------------------
+//-------------------------------------------------------------------------
+
+// return all projects
+$app->get('/projects', function(Request $request, Response $response, array $args){
+
+});
+
+$app->post('/projects', function(Request $request, Response $response, array $args){
+    $header = $request -> getHeaders();
+    $data   = $request -> getParsedBody();
+
+    $api_key    = isset($header["HTTP_AUTHENTICATION_INFO"][0]) ? validate_data($header["HTTP_AUTHENTICATION_INFO"][0]) : '';
+    $p_name = isset($data['p_name']) ? validate_data($data['p_name']) : "";
+    $p_description = isset($data['p_description']) ? validate_data($data['p_description']) : "";
+    $p_start_date = isset($data['p_start_date']) ? validate_data( date('Y-m-d', strtotime($data['p_start_date']))): ''; 
+    $p_finish_date = isset($data['p_finish_date']) ? validate_data(date('Y-m-d', strtotime($data['p_finish_date']))): ''; 
+    $p_budget = isset($data['p_budget']) ? validate_data($data['p_budget']) : "";
+    $position = isset($data['position']) ? validate_data($data['position']) : "";
+    
+    $output = array();
+    if(empty($api_key)){
+        $output = [
+            ["error"=> true, "message"=>"api_key isn't set"]
+        ];
+    }else if(empty($p_name)){
+        $output = [
+            ["error"=> true, "message"=>"p_name isn't set"]
+        ];
+    }else if(empty($p_description)){   
+        $output = [
+            ["error"=> true, "message"=>"p_description isn't set"]
+        ];
+    }else if(empty($p_start_date)){
+        $output = [
+            ["error"=> true, "message"=>"p_start_date isn't set"]
+        ];
+    }else if(empty($p_finish_date)){
+        $output = [
+            ["error"=> true, "message"=>"p_finish_date isn't set"]
+        ];
+    }else if(empty($p_budget)){
+        $output = [
+            ["error"=> true, "message"=>"p_budget isn't set"]
+        ];
+    }else if(empty($position)){
+        $output = [
+            ["error"=> true, "message"=>"position isn't set"]
+        ];
+    }else{
+        $database   = new Database();
+        $connection = $database->connect();
+
+        $user_database    = new UserDatabase($connection);
+        $project_database = new ProjectDatabase($connection);
+
+        $user_information = $user_database->get_user($api_key);
+        if(empty($user_information)){
+            $output = [
+                ["error"=> true, "message"=>"api_key isn't valid"]
+            ];
+        }else{
+            // check this project name didn't reserve
+            $project_information = $project_database->get_project($p_name);
+            if(!empty($project_information)){
+                $output = [
+                    ["error"=> true, "message"=>"this project name already exists"]
+                ];
+            }else{
+                $arr = [
+                    'p_name'        => $p_name,
+                    'p_description' => $p_description,
+                    'p_start_date'  => $p_start_date,
+                    'p_finish_date' => $p_finish_date,
+                    'p_budget'      => $p_budget
+                ];
+                // add project in project table
+                $result = $project_database->add_project($arr);
+                if(empty($result)){
+                    $output = [
+                        ["error"=> true, "message"=>"project doesn't add"]
+                    ];  
+                }else{
+                    $project_information = $project_database->get_project($p_name);
+                    if(empty($project_information)){
+                        $output = [
+                            ["error"=> true, "message"=>"project doesn't exist"]
+                        ];
+                    }else{
+                        $arr = [
+                            'user_id'    => $user_information['id'],
+                            'project_id' => $project_information['id'],
+                            'position'   => $position
+                        ];
+                        $result = $project_database->add_project_member($arr);
+                        if(empty($result)){
+                            $output = [
+                                ["error"=> true, "message"=>"member doesn't add"]
+                            ];
+                        }else{
+                            $output = [
+                                ["error"=> false, "message"=>null]
+                            ];
+                        }
+                    }
+                }
+            }
+        }
+
+        $database->disconnect();
+    }
+    $response->getBody()->write(json_encode($output));
+    return $response;
+});
 
 
 $app->run();
