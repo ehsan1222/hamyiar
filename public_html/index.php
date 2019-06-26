@@ -8,6 +8,7 @@ use Base\Config\UserDatabase;
 use Base\Config\CompanyDatabase;
 use Base\Middleware\UserMiddleware;
 use Base\Config\ProjectDatabase;
+use Base\Config\InvestorDatabase;
 
 require_once __DIR__.'/../vendor/autoload.php';
 
@@ -650,8 +651,8 @@ $app->post('/projects/phases', function(Request $request, Response $response, ar
 
     $api_key     = isset($header["HTTP_AUTHENTICATION_INFO"][0]) ? validate_data($header["HTTP_AUTHENTICATION_INFO"][0]) : '';
     $project_id  = isset($data['project_id']) ? validate_data($data['project_id']) : "";
-    $start_date  = isset($data['start_date']) ? validate_data(date($data['start_date'])) : "";
-    $finish_date = isset($data['finish_date']) ? validate_data(date($data['finish_date'])) : "";
+    $start_date  = isset($data['start_date']) ? validate_data(date('Y-m-d', strtotime($data['start_date']))) : "";
+    $finish_date = isset($data['finish_date']) ? validate_data(date('Y-m-d', strtotime($data['finish_date']))) : "";
     $description = isset($data['description']) ? validate_data($data['description']) : "";
     $budget      = isset($data['budget']) ? validate_data($data['budget']) : "";
     $output = array();
@@ -763,6 +764,141 @@ $app->get('/projects/phases', function(Request $request, Response $response, arr
     $response->getBody()->write(json_encode($output));
     return $response;
 });
+
+
+//-------------------------------------------------------------------------
+//---------------------------------- Investor -----------------------------
+//-------------------------------------------------------------------------
+
+$app->post('/investor', function(Request $request, Response $response, array $args){
+    $header = $request -> getHeaders();
+    $data   = $request -> getParsedBody();
+
+    $MONTH_LATER = '3';
+
+    $api_key    = isset($header["HTTP_AUTHENTICATION_INFO"][0]) ? validate_data($header["HTTP_AUTHENTICATION_INFO"][0]) : '';
+    $amount = isset($data["amount"]) ? validate_data($data['amount']) : "";
+    $p_name = isset($data["p_name"]) ? validate_data($data['p_name']) : "";
+    $company_id = isset($data["company_id"]) ? validate_data($data['company_id']) : "";
+    
+    // time return money
+    $return_date = date('Y-m-d', strtotime("+{$MONTH_LATER} months"));
+    
+    $output = array();
+    if(empty($api_key)){
+        $output = [
+            ["error"=> true, "message"=>"api_key isn't set"]
+        ];
+    } else if(empty($amount)){
+        $output = [
+            ["error"=> true, "message"=>"amount isn't set"]
+        ];
+    } else if(empty($p_name)){
+        $output = [
+            ["error"=> true, "message"=>"p_name isn't set"]
+        ];
+    } else {
+        $database   = new Database();
+        $connection = $database -> connect();
+        
+        $user_database    = new UserDatabase($connection);
+        $user_information = $user_database->get_user($api_key); 
+
+        if(empty($user_information)){
+            $output = [
+                ["error"=> true, "message"=>"api_key isn't valid"]
+            ];
+        }else{
+            $project_database = new ProjectDatabase($connection);
+            $project_information = $project_database-> get_project($p_name);
+            if(empty($project_information)){
+                $output = [
+                    ["error"=> true, "message"=>"p_name isn't valid"]
+                ];
+            }else{
+                if(empty($company_id)){
+                    // this is user investor
+                    $bank_receipt = pay_process();
+                    if(empty($bank_receipt)){
+                        $output = [
+                            ["error"=> true, "message"=>"pay process unfinished"]
+                        ];  
+                    }else{
+                        $arr = [
+                            'user_id'      => $user_information['id'],
+                            'project_id'   => $project_information['id'],
+                            'amount'       => $amount,
+                            'return_date'  => $return_date,
+                            'bank_receipt' => $bank_receipt 
+                        ];
+                        
+                        $investor_database = new InvestorDatabase($connection);
+                        $result = $investor_database->add_user_investor($arr);
+                        if(empty($result)){
+                            $output = [
+                                ["error"=> true, "message"=>"pay process didnt save in database"]
+                            ]; 
+                        }else{
+                            $output = [
+                                ["error"=> false, "message"=>null]
+                            ]; 
+                        }
+                    }
+                    
+                }else{
+                    // this is company investor
+                    $arr=[
+                        'user_id'    => $user_information['id'],
+                        'company_id' => $company_id
+                    ];
+                    $company_database = new CompanyDatabase($connection);
+                    if($company_database->is_member_in_company($arr)){
+                        $bank_receipt = pay_process();
+                        if(empty($bank_receipt)){
+                            $output = [
+                                ["error"=> true, "message"=>"pay process unfinished"]
+                            ];  
+                        }else{
+                            // pay process done successfully
+                            $arr = [
+                                'company_id'  => $company_id,
+                                'project_id'  => $project_information['id'],
+                                'amount'      => $amount,
+                                'return_date' => $return_date,
+                                'bank_receipt'=> $bank_receipt
+                            ];
+                            $investor_database = new InvestorDatabase($connection);
+                            $result = $investor_database->add_company_investor($arr);
+                            if(empty($result)){
+                                $output = [
+                                    ["error"=> true, "message"=>"pay process didnt save in database"]
+                                ]; 
+                            }else{
+                                $output = [
+                                    ["error"=> false, "message"=>null]
+                                ]; 
+                            }
+                        }
+                    }else{
+                        $output = [
+                            ["error"=> true, "message"=>"api_key didn't permission to investicate in this company"]
+                        ];  
+                    }
+    
+                }
+            }
+        }
+
+        $database->disconnect();
+    }
+    $response->getBody()->write(json_encode($output));
+    return $response;
+});
+
+function pay_process(){
+
+    return "456487987852";
+}
 
 $app->run();
 
