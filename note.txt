@@ -165,3 +165,13 @@ output:
 				.......
 			]
 		    ]
+=================================================================
+POST URL: /investor
+form header:
+	Authentication-Info: string   // api_key
+form parameter:
+	amount: int
+	p_name: string				// if [company_id] didnt set -------> user investor run
+	[company_id] : int						|---- else -> company investor run
+output:
+	json output:[error: bool, message: string]
