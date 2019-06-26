@@ -8,6 +8,7 @@ $baseDir = dirname($vendorDir);
 return array(
     'Base\\Config\\CompanyDatabase' => $baseDir . '/app/Base/Config/CompanyDatabase.php',
     'Base\\Config\\Database' => $baseDir . '/app/Base/Config/Database.php',
+    'Base\\Config\\InvestorDatabase' => $baseDir . '/app/Base/Config/InvestorDatabase.php',
     'Base\\Config\\ProjectDatabase' => $baseDir . '/app/Base/Config/ProjectDatabase.php',
     'Base\\Config\\UserDatabase' => $baseDir . '/app/Base/Config/UserDatabase.php',
     'Base\\Middleware\\UserMiddleware' => $baseDir . '/app/Base/Middleware/UserMiddleware.php',
